@@ -5,9 +5,12 @@ use Tinkerwell\ContextMenu\OpenURL;
 use Tinkerwell\ContextMenu\SetCode;
 use Tinkerwell\ContextMenu\Submenu;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpKernel\KernelInterface;
 
 class SymfonyTinkerwellDriver extends TinkerwellDriver
 {
+    private $kernel;
+    
     public function canBootstrap($projectPath)
     {
         return file_exists($projectPath . '/public/index.php') &&
@@ -34,7 +37,8 @@ class SymfonyTinkerwellDriver extends TinkerwellDriver
             Request::setTrustedHosts([$trustedHosts]);
         }
         
-        $kernel = new App\Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+        $this->kernel = new App\Kernel($_SERVER['APP_ENV'], (bool) $_SERVER['APP_DEBUG']);
+        $this->kernel->boot();
     }
 
     public function contextMenu()
@@ -44,6 +48,14 @@ class SymfonyTinkerwellDriver extends TinkerwellDriver
         return [
             Label::create('Detected Symfony v' . $version),
             OpenURL::create('Documentation', "https://symfony.com/doc/{$version}/setup.html"),
+        ];
+    }
+
+    public function getAvailableVariables()
+    {
+        return [
+            '_kernel' => $this->kernel,
+            '_container' => $this->kernel->getContainer(),
         ];
     }
 }
